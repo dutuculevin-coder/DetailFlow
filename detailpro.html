@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DetailPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--brand:#E8420A;--brand-dark:#B83208;--bg:#0A0A0A;--bg2:#141414;--bg3:#1E1E1E;--bg4:#2A2A2A;--text:#F5F5F0;--text2:#A0A0A0;--text3:#555;--border:#2A2A2A;--border2:#3A3A3A;--success:#22C55E;--gold:#F59E0B}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#app{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+.pscroll{flex:1;overflow-y:auto;padding-bottom:90px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--brand);border-radius:50%;animation:spin 0.8s linear infinite}
+#loading-screen{justify-content:center;align-items:center;gap:24px}
+.big-logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px}
+.big-logo span{color:var(--brand)}
+#splash{justify-content:center;align-items:center;padding:40px 24px}
+.splash-logo h1{font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:3px;text-align:center;line-height:1}
+.splash-logo h1 span{color:var(--brand)}
+.splash-logo p{color:var(--text2);font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-top:6px;text-align:center}
+.splash-btns{margin-top:56px;display:flex;flex-direction:column;gap:14px;width:100%}
+.btn-main{background:var(--brand);color:#fff;border:none;padding:18px;border-radius:14px;font-family:'DM Sans';font-size:16px;font-weight:700;cursor:pointer;width:100%;transition:background 0.2s}
+.btn-main:hover{background:var(--brand-dark)}
+.btn-main:disabled{opacity:0.6;cursor:not-allowed}
+.btn-out{background:transparent;color:var(--text);border:1.5px solid var(--border2);padding:18px;border-radius:14px;font-family:'DM Sans';font-size:16px;font-weight:500;cursor:pointer;width:100%;transition:all 0.2s}
+.btn-out:hover{border-color:var(--brand);color:var(--brand)}
+#login{justify-content:center;align-items:center;padding:40px 24px}
+.li{width:100%;max-width:360px}
+.li-logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:2px;text-align:center;margin-bottom:36px}
+.li-logo span{color:var(--brand)}
+.tabs{display:flex;background:var(--bg3);border-radius:12px;padding:4px;margin-bottom:24px}
+.tab{flex:1;padding:11px;border:none;border-radius:10px;font-family:'DM Sans';font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);transition:all 0.2s}
+.tab.on{background:var(--brand);color:#fff}
+.fg{margin-bottom:16px}
+.fl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px}
+.fi{width:100%;background:var(--bg3);border:1.5px solid var(--border2);color:var(--text);padding:13px 15px;border-radius:12px;font-family:'DM Sans';font-size:14px;outline:none;transition:border-color 0.2s}
+.fi:focus{border-color:var(--brand)}
+.back-lnk{text-align:center;margin-top:18px;font-size:13px;color:var(--text2);cursor:pointer}
+.err{background:rgba(232,66,10,0.15);border:1px solid rgba(232,66,10,0.3);color:#ff7c5a;padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none}
+.err.on{display:block}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:430px;background:var(--bg2);border-top:1px solid var(--border);display:none;z-index:200;padding:10px 0 22px}
+.bnav.on{display:flex}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 4px}
+.ni-ico{font-size:22px}
+.ni-lbl{font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+.ni.on .ni-lbl{color:var(--brand)}
+.search-hero{padding:28px 20px 0}
+.search-hero h2{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1.1;letter-spacing:1px}
+.search-hero h2 span{color:var(--brand)}
+.sb{margin:16px 0;position:relative}
+.sb input{width:100%;background:var(--bg3);border:1.5px solid var(--border2);color:var(--text);padding:14px 14px 14px 46px;border-radius:13px;font-family:'DM Sans';font-size:14px;outline:none}
+.sb input:focus{border-color:var(--brand)}
+.sb-ico{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:17px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1.5px solid var(--border2);color:var(--text2);padding:7px 15px;border-radius:20px;font-size:12px;white-space:nowrap;cursor:pointer;transition:all 0.2s;font-weight:500}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.rlist{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.dc{background:var(--bg2);border:1.5px solid var(--border);border-radius:18px;padding:16px;cursor:pointer;transition:border-color 0.2s}
+.dc:hover{border-color:var(--brand)}
+.dc-top{display:flex;gap:12px;align-items:flex-start}
+.dc-av{width:56px;height:56px;border-radius:13px;background:var(--bg4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;overflow:hidden}
+.dc-av img{width:100%;height:100%;object-fit:cover;display:block}
+.dc-info{flex:1}
+.dc-name{font-weight:700;font-size:15px}
+.dc-loc{font-size:12px;color:var(--text2);margin-top:2px}
+.dc-stars{display:flex;align-items:center;gap:3px;margin-top:4px}
+.dc-rating{font-size:12px;color:var(--text2);margin-left:2px}
+.dc-badge{background:rgba(232,66,10,0.12);color:var(--brand);font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
+.dc-pkgs{display:flex;gap:7px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+.dc-pkgs::-webkit-scrollbar{display:none}
+.dc-pc{background:var(--bg3);border:1px solid var(--border2);padding:6px 11px;border-radius:9px;font-size:11px;color:var(--text2);white-space:nowrap}
+.dc-pc strong{color:var(--text);display:block;font-size:12px;font-weight:600}
+.cover{height:190px;background:linear-gradient(135deg,#1c0b05,#2d1410 60%,#0a0a0a);position:relative;display:flex;align-items:flex-end;padding:16px;flex-shrink:0}
+.cover-pat{position:absolute;inset:0;opacity:0.05;background-image:radial-gradient(circle,#E8420A 1px,transparent 1px);background-size:24px 24px}
+.cover-back{position:absolute;top:16px;left:16px;background:rgba(0,0,0,0.55);border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.cover-av{width:74px;height:74px;border-radius:17px;background:var(--bg3);border:3px solid var(--bg);font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;flex-shrink:0;overflow:hidden}
+.cover-av img{width:100%;height:100%;object-fit:cover}
+.cover-info{margin-left:12px;z-index:1}
+.cover-name{font-weight:700;font-size:21px}
+.cover-sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px}
+.verif{display:inline-block;background:var(--brand);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:0.5px;margin-top:5px}
+.pbody{padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+.s3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.s3-box{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:13px;text-align:center}
+.s3-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--brand);line-height:1}
+.s3-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.sec-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.pkgs{display:flex;flex-direction:column;gap:10px}
+.pkgc{background:var(--bg2);border:1.5px solid var(--border);border-radius:15px;padding:14px}
+.pkg-top{display:flex;justify-content:space-between;align-items:center}
+.pkg-name{font-weight:700;font-size:14px}
+.pkg-price{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--brand)}
+.pkg-desc{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6}
+.pkg-imgs{display:flex;gap:7px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.pkg-imgs::-webkit-scrollbar{display:none}
+.pimg{width:70px;height:70px;border-radius:9px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--border2);flex-shrink:0;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.gi{aspect-ratio:1;background:var(--bg3);border-radius:11px;font-size:26px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);overflow:hidden;cursor:pointer}
+.gi img{width:100%;height:100%;object-fit:cover;display:block}
+.rvs{display:flex;flex-direction:column}
+.rv{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--border)}
+.rv:last-child{border-bottom:none}
+.rv-av{width:38px;height:38px;border-radius:50%;background:var(--bg4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
+.rv-name{font-size:13px;font-weight:600}
+.rv-date{font-size:10px;color:var(--text3)}
+.rv-txt{font-size:12px;color:var(--text2);margin-top:5px;line-height:1.6}
+.bookbtn{background:var(--brand);color:#fff;border:none;padding:17px;border-radius:15px;font-family:'DM Sans';font-size:16px;font-weight:700;cursor:pointer;width:100%;transition:background 0.2s}
+.bookbtn:hover{background:var(--brand-dark)}
+.bookbtn:disabled{opacity:0.6;cursor:not-allowed}
+.bk-head{padding:24px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.bk-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px}
+.xbtn{background:var(--bg3);border:none;color:var(--text2);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bk-sec{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.bk-sec-t{font-weight:700;font-size:14px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tc{background:var(--bg3);border:1.5px solid var(--border2);color:var(--text2);padding:9px 6px;border-radius:10px;font-size:12px;text-align:center;cursor:pointer;transition:all 0.2s;font-weight:500}
+.tc.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.sel-pkg{border-color:var(--brand) !important}
+.dash-top{padding:24px 20px 0}
+.dash-greet{font-size:13px;color:var(--text2);font-weight:500}
+.dash-name{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:1px;line-height:1}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 20px 0}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px}
+.mc.acc{background:var(--brand);border-color:var(--brand)}
+.mc-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.mc.acc .mc-lbl{color:rgba(255,255,255,0.75)}
+.mc-val{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1.1;margin-top:4px}
+.mc.acc .mc-val{color:#fff}
+.mc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.mc.acc .mc-sub{color:rgba(255,255,255,0.65)}
+.cal-sec{padding:16px 20px 0}
+.cal-box{background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px}
+.cal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cal-mn{font-weight:600;font-size:14px}
+.cal-nav{background:var(--bg3);border:none;color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px}
+.cal-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px}
+.cal-wkd{text-align:center;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cd{text-align:center;padding:8px 4px;border-radius:9px;font-size:12px;cursor:pointer;position:relative;transition:background 0.15s}
+.cd:hover{background:var(--bg3)}
+.cd.tod{background:var(--brand);color:#fff;font-weight:700}
+.cd.bk::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--brand)}
+.cd.tod.bk::after{background:#fff}
+.cd.dim{color:var(--text3)}
+.bks-list{padding:16px 20px 0}
+.bki{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:10px}
+.bki-top{display:flex;justify-content:space-between;align-items:flex-start}
+.bki-cl{font-weight:700;font-size:14px}
+.bki-t{font-size:12px;color:var(--text2);margin-top:3px}
+.bki-pkg{font-size:11px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-top:6px}
+.badge{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.b-conf{background:rgba(34,197,94,0.15);color:var(--success)}
+.b-pend{background:rgba(245,158,11,0.15);color:var(--gold)}
+.myp-hd{padding:24px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.myp-t{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px}
+.save-btn{background:var(--brand);border:none;color:#fff;padding:9px 20px;border-radius:20px;font-family:'DM Sans';font-size:13px;font-weight:700;cursor:pointer}
+.save-btn:disabled{opacity:0.6;cursor:not-allowed}
+.ed-sec{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.ed-sec-t{font-weight:700;font-size:14px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sel{-webkit-appearance:none}
+.ta{resize:none;line-height:1.6}
+.add-btn{width:100%;background:transparent;border:1.5px dashed var(--border2);color:var(--text2);padding:14px;border-radius:13px;font-family:'DM Sans';font-size:13px;cursor:pointer;transition:all 0.2s;margin-top:10px}
+.add-btn:hover{border-color:var(--brand);color:var(--brand)}
+.photo-row{display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.av-wrap{position:relative;cursor:pointer;flex-shrink:0}
+.av-big{width:80px;height:80px;border-radius:18px;background:var(--bg4);font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border2)}
+.av-big img{width:100%;height:100%;object-fit:cover;display:block}
+.av-ov{position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;border-radius:18px;opacity:0;transition:opacity 0.2s;font-size:22px}
+.av-wrap:hover .av-ov{opacity:1}
+.pm-name{font-weight:700;font-size:18px}
+.pm-area{font-size:12px;color:var(--text2);margin-top:2px}
+.pm-hint{font-size:11px;color:var(--text3);margin-top:6px}
+.ugrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.uc{aspect-ratio:1;border-radius:12px;overflow:hidden;position:relative;cursor:pointer}
+.uc img{width:100%;height:100%;object-fit:cover;display:block}
+.uc-rm{position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:22px;height:22px;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s}
+.uc:hover .uc-rm{opacity:1}
+.uadd{aspect-ratio:1;border-radius:12px;background:var(--bg3);border:1.5px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;gap:5px}
+.uadd:hover{border-color:var(--brand)}
+.uadd-ico{font-size:26px}
+.uadd-lbl{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.pkg-ed{background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:14px;margin-bottom:10px}
+.pkg-ph-row{display:flex;gap:7px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.pkg-ph-row::-webkit-scrollbar{display:none}
+.pkg-th{width:64px;height:64px;border-radius:9px;background:var(--bg4);overflow:hidden;position:relative;flex-shrink:0}
+.pkg-th img{width:100%;height:100%;object-fit:cover;display:block}
+.pkg-th-rm{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.75);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.pkg-th:hover .pkg-th-rm{display:flex}
+.pkg-add{width:64px;height:64px;border-radius:9px;background:var(--bg4);border:1.5px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;gap:2px}
+.pkg-add:hover{border-color:var(--brand)}
+.pkg-add span:first-child{font-size:20px}
+.pkg-add span:last-child{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase}
+input[type="file"]{display:none}
+#lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:500;align-items:center;justify-content:center}
+#lb.on{display:flex}
+#lb img{max-width:92%;max-height:87vh;border-radius:12px;object-fit:contain}
+#lb-x{position:absolute;top:18px;right:18px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:13px 24px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap;border:1px solid var(--border2)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:50px 20px;color:var(--text2)}
+.empty-ico{font-size:48px;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="screen active" id="loading-screen">
+  <div class="big-logo">DETAIL<span>PRO</span></div>
+  <div class="spinner"></div>
+</div>
+
+<div class="screen" id="splash">
+  <div class="splash-logo"><h1>DETAIL<span>PRO</span></h1><p>Find · Book · Shine</p></div>
+  <div class="splash-btns">
+    <button class="btn-main" id="btn-c">🚗 &nbsp;Find a Detailer</button>
+    <button class="btn-out" id="btn-d">🔧 &nbsp;I'm a Detailer</button>
+  </div>
+</div>
+
+<div class="screen" id="login">
+  <div class="li">
+    <div class="li-logo">DETAIL<span>PRO</span></div>
+    <div class="tabs">
+      <button class="tab on" id="t-in">Sign In</button>
+      <button class="tab" id="t-up">Create Account</button>
+    </div>
+    <div class="err" id="err"></div>
+    <div class="fg" id="name-fg" style="display:none"><label class="fl">Full Name</label><input class="fi" id="i-name" placeholder="Mike Johnson"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" id="i-email" type="email" placeholder="you@example.com"></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" id="i-pass" type="password" placeholder="••••••••"></div>
+    <button class="btn-main" id="li-btn" style="margin-top:4px">Sign In</button>
+    <div class="back-lnk" id="li-back">← Back to home</div>
+  </div>
+</div>
+
+<div class="screen" id="search">
+  <div class="pscroll">
+    <div class="search-hero">
+      <h2>Find your<br><span>perfect detail.</span></h2>
+      <div class="sb"><span class="sb-ico">🔍</span><input type="text" id="sinput" placeholder="City, ZIP, or name..."></div>
+      <div class="chips" id="chips">
+        <div class="chip on" data-f="all">All</div>
+        <div class="chip" data-f="budget">Budget</div>
+        <div class="chip" data-f="mid">Mid-Range</div>
+        <div class="chip" data-f="premium">Premium</div>
+        <div class="chip" data-f="mobile">Mobile</div>
+        <div class="chip" data-f="expert">Expert 5★</div>
+      </div>
+    </div>
+    <div class="rlist" id="rlist"></div>
+  </div>
+</div>
+
+<div class="screen" id="profile">
+  <div class="cover">
+    <div class="cover-pat"></div>
+    <button class="cover-back" id="p-back">←</button>
+    <div class="cover-av" id="p-av"></div>
+    <div class="cover-info">
+      <div class="cover-name" id="p-name">—</div>
+      <div class="cover-sub" id="p-sub">—</div>
+      <div class="verif">✓ VERIFIED PRO</div>
+    </div>
+  </div>
+  <div class="pscroll">
+    <div class="pbody">
+      <div class="s3">
+        <div class="s3-box"><div class="s3-num" id="p-rat">—</div><div class="s3-lbl">Rating</div></div>
+        <div class="s3-box"><div class="s3-num" id="p-jobs">—</div><div class="s3-lbl">Jobs Done</div></div>
+        <div class="s3-box"><div class="s3-num" id="p-exp">—</div><div class="s3-lbl">Years Exp.</div></div>
+      </div>
+      <div><div class="sec-lbl">Service Packages</div><div class="pkgs" id="p-pkgs"></div></div>
+      <div><div class="sec-lbl">Previous Work</div><div class="gal" id="p-gal"></div></div>
+      <div><div class="sec-lbl">Customer Reviews</div><div class="rvs" id="p-revs"></div></div>
+      <button class="bookbtn" id="go-book">Book Now →</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="booking">
+  <div class="bk-head"><div class="bk-title">BOOKING</div><button class="xbtn" id="bk-x">✕</button></div>
+  <div class="pscroll" style="padding:16px 20px">
+    <div class="bk-sec"><div class="bk-sec-t">Select Package</div><div id="bk-pkgs"></div></div>
+    <div class="bk-sec"><div class="bk-sec-t">Choose Date</div><input class="fi" type="date" id="bk-date" style="margin:0"></div>
+    <div class="bk-sec">
+      <div class="bk-sec-t">Choose Time</div>
+      <div class="tgrid" id="tgrid">
+        <div class="tc on">9:00 AM</div><div class="tc">11:00 AM</div>
+        <div class="tc">1:00 PM</div><div class="tc">3:00 PM</div><div class="tc">5:00 PM</div>
+      </div>
+    </div>
+    <div class="bk-sec">
+      <div class="bk-sec-t">Your Vehicle</div>
+      <div class="fg"><label class="fl">Make & Model</label><input class="fi" id="bk-veh" placeholder="e.g. 2022 BMW M3"></div>
+      <div class="fg" style="margin:0"><label class="fl">Notes</label><textarea class="fi ta" id="bk-notes" rows="3" placeholder="Any special requests..."></textarea></div>
+    </div>
+    <button class="bookbtn" id="conf-bk">Confirm Booking →</button>
+  </div>
+</div>
+
+<div class="screen" id="dashboard">
+  <div class="pscroll">
+    <div class="dash-top">
+      <div class="dash-greet">Good morning,</div>
+      <div class="dash-name" id="d-name">LOADING...</div>
+    </div>
+    <div class="metrics">
+      <div class="mc acc"><div class="mc-lbl">This Month</div><div class="mc-val" id="d-rev">$0</div><div class="mc-sub" id="d-rev-s">loading...</div></div>
+      <div class="mc"><div class="mc-lbl">Bookings</div><div class="mc-val" id="d-bk">0</div><div class="mc-sub" id="d-bk-s">loading...</div></div>
+      <div class="mc"><div class="mc-lbl">Rating</div><div class="mc-val" id="d-rat">—</div><div class="mc-sub" id="d-rat-s">0 reviews</div></div>
+      <div class="mc"><div class="mc-lbl">Total Earned</div><div class="mc-val" id="d-tot">$0</div><div class="mc-sub">Since joining</div></div>
+    </div>
+    <div class="cal-sec">
+      <div class="sec-lbl" style="margin-bottom:12px" id="cal-lbl">Calendar</div>
+      <div class="cal-box">
+        <div class="cal-hd"><button class="cal-nav" id="cal-prev">‹</button><div class="cal-mn" id="cal-mn">—</div><button class="cal-nav" id="cal-next">›</button></div>
+        <div class="cal-wk"><div class="cal-wkd">Su</div><div class="cal-wkd">Mo</div><div class="cal-wkd">Tu</div><div class="cal-wkd">We</div><div class="cal-wkd">Th</div><div class="cal-wkd">Fr</div><div class="cal-wkd">Sa</div></div>
+        <div class="cal-days" id="cal-days"></div>
+      </div>
+    </div>
+    <div class="bks-list"><div class="sec-lbl" style="margin-bottom:12px">Upcoming Bookings</div><div id="bk-list"></div></div>
+  </div>
+</div>
+
+<div class="screen" id="myprofile">
+  <div class="myp-hd"><div class="myp-t">MY PROFILE</div><button class="save-btn" id="save-btn">Save</button></div>
+  <div class="pscroll" style="padding:16px 20px">
+    <div class="photo-row">
+      <div class="av-wrap" id="av-trigger">
+        <div class="av-big" id="av-big"><span id="av-emoji">👤</span></div>
+        <div class="av-ov">📷</div>
+      </div>
+      <div>
+        <div class="pm-name" id="pm-name">—</div>
+        <div class="pm-area" id="pm-area">—</div>
+        <div class="pm-hint">Tap to change profile photo</div>
+      </div>
+    </div>
+    <input type="file" id="av-input" accept="image/*">
+    <div class="ed-sec">
+      <div class="ed-sec-t">Business Info</div>
+      <div class="fg"><label class="fl">Business Name</label><input class="fi" id="ed-biz"></div>
+      <div class="fg"><label class="fl">Service Area</label><input class="fi" id="ed-area" placeholder="e.g. Miami, Coral Gables, FL"></div>
+      <div class="fg"><label class="fl">Years of Experience</label>
+        <select class="fi sel" id="ed-exp"><option value="1">1-2 years</option><option value="3">3-5 years</option><option value="6">6-9 years</option><option value="10">10+ years</option></select>
+      </div>
+      <div class="fg"><label class="fl">Mobile Service?</label>
+        <select class="fi sel" id="ed-mob"><option value="true">Yes – I come to the customer</option><option value="false">No – Customer comes to me</option></select>
+      </div>
+      <div class="fg" style="margin:0"><label class="fl">Bio</label><textarea class="fi ta" id="ed-bio" rows="3" placeholder="Tell customers about yourself..."></textarea></div>
+    </div>
+    <div class="ed-sec">
+      <div class="ed-sec-t">Service Packages</div>
+      <div id="pkg-list"></div>
+      <button class="add-btn" id="add-pkg">+ Add Package</button>
+    </div>
+    <div class="ed-sec">
+      <div class="ed-sec-t">Portfolio Gallery</div>
+      <div class="ugrid" id="ugrid"></div>
+      <input type="file" id="gal-input" accept="image/*" multiple>
+      <p style="font-size:11px;color:var(--text3);margin-top:6px">Hover photo to remove · Tap + to add</p>
+    </div>
+  </div>
+</div>
+
+<div class="bnav" id="cnav">
+  <div class="ni on" data-cs="search"><div class="ni-ico">🔍</div><div class="ni-lbl">Find</div></div>
+  <div class="ni" data-cs="search"><div class="ni-ico">📅</div><div class="ni-lbl">Bookings</div></div>
+  <div class="ni" id="c-out"><div class="ni-ico">🚪</div><div class="ni-lbl">Logout</div></div>
+</div>
+
+<div class="bnav" id="dnav">
+  <div class="ni on" data-ds="dashboard"><div class="ni-ico">📊</div><div class="ni-lbl">Dashboard</div></div>
+  <div class="ni" data-ds="myprofile"><div class="ni-ico">✏️</div><div class="ni-lbl">My Profile</div></div>
+  <div class="ni" id="d-out"><div class="ni-ico">🚪</div><div class="ni-lbl">Logout</div></div>
+</div>
+
+<div id="lb"><button id="lb-x">✕</button><img id="lb-img" src="" alt=""></div>
+<div id="toast"></div>
+</div>
+
+<script>
+const SB_URL='https://dvfjrfmvehqybxbjvgwp.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2ZmpyZm12ZWhxeWJ4Ymp2Z3dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTE0NDcsImV4cCI6MjA5MTIyNzQ0N30.BuPl-G9BVidDbITadv2p8GukJ6P7mmUagbw1TYcbHFo';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+let mode='customer',curFilter='all',curD=null,selPkgId=null,selTime='9:00 AM';
+let user=null,profile=null,dpProfile=null,myPkgs=[],myGallery=[];
+let calY=new Date().getFullYear(),calM=new Date().getMonth(),bookedDays=[];
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');window.scrollTo(0,0);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3500);}
+function showErr(m){const e=document.getElementById('err');e.textContent=m;e.classList.add('on');}
+function hideErr(){document.getElementById('err').classList.remove('on');}
+function initials(n){if(!n)return '👤';return n.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);}
+function fmtDate(d){if(!d)return '—';return new Date(d).toLocaleDateString('en-US',{month:'short',year:'numeric'});}
+function fmtMoney(n){return '$'+(parseFloat(n)||0).toLocaleString();}
+
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){user=session.user;await loadProfile();}
+  else show('splash');
+}
+
+async function loadProfile(){
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  profile=p;
+  if(!p){show('splash');return;}
+  if(p.role==='detailer'){
+    mode='detailer';
+    document.getElementById('dnav').classList.add('on');
+    document.getElementById('cnav').classList.remove('on');
+    await loadDashboard();
+    show('dashboard');
+  } else {
+    mode='customer';
+    document.getElementById('cnav').classList.add('on');
+    document.getElementById('dnav').classList.remove('on');
+    await loadDetailers();
+    show('search');
+  }
+}
+
+async function doAuth(){
+  hideErr();
+  const email=document.getElementById('i-email').value.trim();
+  const pass=document.getElementById('i-pass').value;
+  const isUp=document.getElementById('t-up').classList.contains('on');
+  const name=document.getElementById('i-name').value.trim();
+  const btn=document.getElementById('li-btn');
+  if(!email||!pass){showErr('Please fill in all fields.');return;}
+  if(isUp&&!name){showErr('Please enter your name.');return;}
+  btn.disabled=true;btn.textContent=isUp?'Creating...':'Signing in...';
+  if(isUp){
+    const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name,role:mode}}});
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Create Account';return;}
+    user=data.user;toast('✅ Account created! Welcome to DetailPro.');
+  } else {
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){showErr('Wrong email or password.');btn.disabled=false;btn.textContent='Sign In';return;}
+    user=data.user;
+  }
+  btn.disabled=false;btn.textContent=isUp?'Create Account':'Sign In';
+  await loadProfile();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  user=null;profile=null;dpProfile=null;myPkgs=[];myGallery=[];
+  document.getElementById('cnav').classList.remove('on');
+  document.getElementById('dnav').classList.remove('on');
+  show('splash');toast('👋 Logged out.');
+}
+
+async function loadDetailers(){
+  document.getElementById('rlist').innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Loading detailers...</p></div>';
+  const {data}=await sb.from('detailer_profiles').select('*,profiles(full_name,avatar_url),packages(id,name,price)');
+  window._dls=data||[];
+  renderList(window._dls);
+}
+
+function renderList(list){
+  const el=document.getElementById('rlist');
+  const q=(document.getElementById('sinput').value||'').toLowerCase();
+  const filtered=list.filter(d=>{
+    const nm=(d.profiles?.full_name||'').toLowerCase();
+    const ar=(d.service_area||'').toLowerCase();
+    const mq=!q||nm.includes(q)||ar.includes(q);
+    const pr=d.packages?.length?Math.min(...d.packages.map(p=>p.price)):9999;
+    const mf=curFilter==='all'||(curFilter==='budget'&&pr<100)||(curFilter==='mid'&&pr>=100&&pr<300)||(curFilter==='premium'&&pr>=300)||(curFilter==='mobile'&&d.is_mobile)||(curFilter==='expert'&&d.rating>=4.9);
+    return mq&&mf;
+  });
+  if(!filtered.length){el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>No detailers found.<br>Try a different filter.</p></div>';return;}
+  el.innerHTML=filtered.map(d=>{
+    const nm=d.profiles?.full_name||'Unknown';
+    const av=d.profiles?.avatar_url;
+    const avH=av?`<img src="${av}" alt="">`:`<span>${initials(nm)}</span>`;
+    const rat=d.rating?parseFloat(d.rating).toFixed(1):'New';
+    const stars=d.rating?'★'.repeat(Math.round(d.rating)):'☆☆☆☆☆';
+    const badge=d.rating>=4.9?'Expert':d.is_mobile?'Mobile Pro':'Verified';
+    const pks=(d.packages||[]).slice(0,3).map(p=>`<div class="dc-pc"><strong>$${parseFloat(p.price).toFixed(0)}</strong>${p.name}</div>`).join('');
+    return `<div class="dc" data-id="${d.id}"><div class="dc-top"><div class="dc-av">${avH}</div><div class="dc-info"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="dc-name">${nm}</div><div class="dc-badge">${badge}</div></div><div class="dc-loc">📍 ${d.service_area||'USA'}${d.is_mobile?' · 🚐 Mobile':''}</div><div class="dc-stars"><span style="color:var(--gold);font-size:12px">${stars}</span><span class="dc-rating">${rat} (${d.total_jobs||0} jobs)</span></div></div></div><div class="dc-pkgs">${pks||'<div class="dc-pc">No packages yet</div>'}</div></div>`;
+  }).join('');
+  el.querySelectorAll('.dc').forEach(c=>c.addEventListener('click',()=>openProfile(c.dataset.id)));
+}
+
+async function openProfile(id){
+  show('profile');
+  document.getElementById('p-av').innerHTML='<div class="spinner" style="margin:0 auto"></div>';
+  const {data:d}=await sb.from('detailer_profiles').select('*,profiles(full_name,avatar_url),packages(id,name,price,description,package_photos(url)),portfolio_photos(url)').eq('id',id).single();
+  if(!d){toast('Could not load profile.');show('search');return;}
+  curD=d;
+  const nm=d.profiles?.full_name||'Unknown';
+  const av=d.profiles?.avatar_url;
+  document.getElementById('p-av').innerHTML=av?`<img src="${av}" alt="">`:`<span style="font-size:24px;font-weight:700">${initials(nm)}</span>`;
+  document.getElementById('p-name').textContent=nm;
+  document.getElementById('p-sub').textContent=(d.years_experience>=6?'Certified':'Professional')+' Detailer · '+(d.service_area||'USA');
+  document.getElementById('p-rat').textContent=d.rating?parseFloat(d.rating).toFixed(1):'New';
+  document.getElementById('p-jobs').textContent=d.total_jobs||0;
+  document.getElementById('p-exp').textContent=d.years_experience||1;
+  document.getElementById('p-pkgs').innerHTML=(d.packages||[]).map(p=>`<div class="pkgc"><div class="pkg-top"><div class="pkg-name">${p.name}</div><div class="pkg-price">$${parseFloat(p.price).toFixed(0)}</div></div><div class="pkg-desc">${p.description||''}</div><div class="pkg-imgs">${(p.package_photos||[]).map(ph=>`<div class="pimg"><img src="${ph.url}" alt=""></div>`).join('')||'<div class="pimg">🚗</div><div class="pimg">✨</div>'}</div></div>`).join('')||'<p style="color:var(--text2);font-size:13px">No packages yet.</p>';
+  document.getElementById('p-gal').innerHTML=(d.portfolio_photos||[]).map(ph=>`<div class="gi" onclick="openLB('${ph.url}')"><img src="${ph.url}" alt=""></div>`).join('')||['🚗','✨','🚙','💎','🌟','🔥'].map(e=>`<div class="gi">${e}</div>`).join('');
+  const {data:revs}=await sb.from('reviews').select('*,profiles(full_name)').eq('detailer_id',id).order('created_at',{ascending:false}).limit(10);
+  document.getElementById('p-revs').innerHTML=(revs||[]).map(r=>`<div class="rv"><div class="rv-av">👤</div><div style="flex:1"><div style="display:flex;justify-content:space-between"><div class="rv-name">${r.profiles?.full_name||'Customer'}</div><div class="rv-date">${fmtDate(r.created_at)}</div></div><div style="color:var(--gold);font-size:12px;margin-top:2px">${'★'.repeat(r.rating)}</div><div class="rv-txt">${r.comment||''}</div></div></div>`).join('')||'<p style="color:var(--text2);font-size:13px;padding:12px 0">No reviews yet.</p>';
+}
+
+function openBooking(){
+  if(!curD)return;
+  const pkgs=curD.packages||[];
+  if(!pkgs.length){toast('No packages available.');return;}
+  selPkgId=pkgs[0].id;
+  document.getElementById('bk-pkgs').innerHTML=pkgs.map((p,i)=>`<div class="pkgc${i===0?' sel-pkg':''}" style="margin-bottom:10px;cursor:pointer" data-pid="${p.id}"><div class="pkg-top"><div class="pkg-name">${p.name}</div><div class="pkg-price">$${parseFloat(p.price).toFixed(0)}</div></div><div class="pkg-desc" style="font-size:12px">${p.description||''}</div></div>`).join('');
+  document.getElementById('bk-pkgs').querySelectorAll('.pkgc').forEach(c=>{c.addEventListener('click',()=>{document.getElementById('bk-pkgs').querySelectorAll('.pkgc').forEach(x=>x.classList.remove('sel-pkg'));c.classList.add('sel-pkg');selPkgId=c.dataset.pid;});});
+  document.getElementById('bk-date').value=new Date().toISOString().split('T')[0];
+  show('booking');
+}
+
+async function confirmBooking(){
+  if(!user){toast('Please log in to book.');return;}
+  const date=document.getElementById('bk-date').value;
+  if(!date||!selPkgId){toast('Please select a date and package.');return;}
+  const btn=document.getElementById('conf-bk');
+  btn.disabled=true;btn.textContent='Booking...';
+  const pkg=curD.packages.find(p=>p.id===selPkgId);
+  const {error}=await sb.from('bookings').insert({customer_id:user.id,detailer_id:curD.id,package_id:selPkgId,booking_date:date,booking_time:selTime,vehicle:document.getElementById('bk-veh').value,notes:document.getElementById('bk-notes').value,status:'pending',total_price:pkg?.price||0});
+  btn.disabled=false;btn.textContent='Confirm Booking →';
+  if(error){toast('❌ Error: '+error.message);return;}
+  toast('🎉 Booking confirmed! The detailer will contact you.');
+  show('search');
+}
+
+async function loadDashboard(){
+  const {data:dp}=await sb.from('detailer_profiles').select('*').eq('id',user.id).single();
+  dpProfile=dp;
+  const nm=profile?.full_name||'Detailer';
+  document.getElementById('d-name').textContent=nm.split(' ')[0].toUpperCase()+' 👋';
+  const {data:bks}=await sb.from('bookings').select('*,packages(name,price),profiles(full_name)').eq('detailer_id',user.id).order('booking_date',{ascending:true});
+  const now=new Date(),cm=now.getMonth(),cy=now.getFullYear();
+  const mbks=(bks||[]).filter(b=>{const d=new Date(b.booking_date);return d.getMonth()===cm&&d.getFullYear()===cy;});
+  const mRev=mbks.filter(b=>b.status==='confirmed'||b.status==='completed').reduce((s,b)=>s+(parseFloat(b.total_price)||0),0);
+  const tRev=(bks||[]).filter(b=>b.status==='confirmed'||b.status==='completed').reduce((s,b)=>s+(parseFloat(b.total_price)||0),0);
+  const pend=(bks||[]).filter(b=>b.status==='pending').length;
+  document.getElementById('d-rev').textContent=fmtMoney(mRev);
+  document.getElementById('d-rev-s').textContent=mbks.length+' bookings this month';
+  document.getElementById('d-bk').textContent=(bks||[]).length;
+  document.getElementById('d-bk-s').textContent=pend+' pending';
+  document.getElementById('d-rat').textContent=dp?.rating?parseFloat(dp.rating).toFixed(1)+'★':'New';
+  document.getElementById('d-tot').textContent=fmtMoney(tRev);
+  bookedDays=(bks||[]).map(b=>new Date(b.booking_date).getDate());
+  buildCal();
+  const upcoming=(bks||[]).filter(b=>new Date(b.booking_date)>=now).slice(0,10);
+  document.getElementById('bk-list').innerHTML=upcoming.map(b=>`<div class="bki"><div class="bki-top"><div><div class="bki-cl">${b.profiles?.full_name||'Customer'}</div><div class="bki-t">🕐 ${b.booking_date} · ${b.booking_time}</div><div class="bki-pkg">📦 ${b.packages?.name||'Package'} · ${fmtMoney(b.total_price)}</div></div><div class="badge ${b.status==='confirmed'?'b-conf':'b-pend'}">${b.status}</div></div></div>`).join('')||'<div class="empty"><div class="empty-ico">📅</div><p>No upcoming bookings yet.</p></div>';
+  const {data:pkgs}=await sb.from('packages').select('*,package_photos(id,url)').eq('detailer_id',user.id).order('sort_order');
+  myPkgs=pkgs||[];
+  const {data:gal}=await sb.from('portfolio_photos').select('*').eq('detailer_id',user.id);
+  myGallery=gal||[];
+  if(dp){
+    document.getElementById('ed-biz').value=dp.business_name||'';
+    document.getElementById('ed-area').value=dp.service_area||'';
+    document.getElementById('ed-bio').value=dp.bio||'';
+    document.getElementById('ed-mob').value=dp.is_mobile?'true':'false';
+    document.getElementById('ed-exp').value=dp.years_experience||1;
+    document.getElementById('pm-name').textContent=profile?.full_name||'—';
+    document.getElementById('pm-area').textContent=dp.service_area||'—';
+  }
+  if(profile?.avatar_url){document.getElementById('av-big').innerHTML=`<img src="${profile.avatar_url}" alt="">`;}
+  renderGallery();renderPkgEditor();
+}
+
+function buildCal(){
+  const now=new Date();
+  const lbl=new Date(calY,calM).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  document.getElementById('cal-mn').textContent=lbl;
+  document.getElementById('cal-lbl').textContent='Calendar — '+lbl;
+  const fd=new Date(calY,calM,1).getDay();
+  const dim=new Date(calY,calM+1,0).getDate();
+  const pdim=new Date(calY,calM,0).getDate();
+  let h='';
+  for(let i=fd-1;i>=0;i--)h+=`<div class="cd dim">${pdim-i}</div>`;
+  for(let d=1;d<=dim;d++){const isT=d===now.getDate()&&calM===now.getMonth()&&calY===now.getFullYear();const hasBk=bookedDays.includes(d);h+=`<div class="cd${isT?' tod':''}${hasBk?' bk':''}">${d}</div>`;}
+  const rem=42-fd-dim;for(let i=1;i<=rem;i++)h+=`<div class="cd dim">${i}</div>`;
+  document.getElementById('cal-days').innerHTML=h;
+}
+
+function initAvUpload(){
+  document.getElementById('av-trigger').addEventListener('click',()=>document.getElementById('av-input').click());
+  document.getElementById('av-input').addEventListener('change',async function(){
+    const f=this.files[0];if(!f)return;
+    toast('⏳ Uploading photo...');
+    const ext=f.name.split('.').pop();
+    const path=`${user.id}/avatar.${ext}`;
+    const {error}=await sb.storage.from('avatars').upload(path,f,{upsert:true});
+    if(error){toast('❌ '+error.message);return;}
+    const {data:u}=sb.storage.from('avatars').getPublicUrl(path);
+    await sb.from('profiles').update({avatar_url:u.publicUrl}).eq('id',user.id);
+    document.getElementById('av-big').innerHTML=`<img src="${u.publicUrl}" alt="">`;
+    toast('✅ Profile photo updated!');this.value='';
+  });
+}
+
+function renderGallery(){
+  const g=document.getElementById('ugrid');
+  let h=myGallery.map(ph=>`<div class="uc"><img src="${ph.url}" alt=""><button class="uc-rm" data-id="${ph.id}">✕</button></div>`).join('');
+  h+=`<div class="uadd" id="uadd"><div class="uadd-ico">📷</div><div class="uadd-lbl">Add Photo</div></div>`;
+  g.innerHTML=h;
+  document.getElementById('uadd').addEventListener('click',()=>document.getElementById('gal-input').click());
+  g.querySelectorAll('.uc-rm').forEach(b=>b.addEventListener('click',async e=>{e.stopPropagation();const id=b.dataset.id;await sb.from('portfolio_photos').delete().eq('id',id);myGallery=myGallery.filter(p=>p.id!==id);renderGallery();toast('🗑️ Photo removed.');}));
+}
+
+function initGallery(){
+  document.getElementById('gal-input').addEventListener('change',async function(){
+    const files=Array.from(this.files);
+    toast('⏳ Uploading '+files.length+' photo'+(files.length>1?'s':'')+'...');
+    for(const f of files){
+      const ext=f.name.split('.').pop();
+      const path=`${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const {error}=await sb.storage.from('portfolio').upload(path,f);
+      if(error)continue;
+      const {data:u}=sb.storage.from('portfolio').getPublicUrl(path);
+      const {data:ins}=await sb.from('portfolio_photos').insert({detailer_id:user.id,url:u.publicUrl}).select().single();
+      if(ins)myGallery.push(ins);
+    }
+    renderGallery();toast('✅ '+files.length+' photo'+(files.length>1?'s':'')+' uploaded!');this.value='';
+  });
+}
+
+function renderPkgEditor(){
+  const el=document.getElementById('pkg-list');
+  el.innerHTML=myPkgs.map((p,pi)=>`
+    <div class="pkg-ed">
+      <div class="fg" style="margin-bottom:10px"><label class="fl">Package Name</label><input class="fi" value="${p.name}" data-pi="${pi}" data-f="name"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="fg" style="margin:0"><label class="fl">Price ($)</label><input class="fi" type="number" value="${p.price}" data-pi="${pi}" data-f="price"></div>
+        <div class="fg" style="margin:0"><label class="fl">Duration (hrs)</label><input class="fi" type="number" value="${p.duration_hours||2}" data-pi="${pi}" data-f="duration_hours"></div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label class="fl">Description</label><textarea class="fi ta" rows="2" data-pi="${pi}" data-f="description">${p.description||''}</textarea></div>
+      <label class="fl">Package Photos</label>
+      <div class="pkg-ph-row">
+        ${(p.package_photos||[]).map(ph=>`<div class="pkg-th"><img src="${ph.url}" alt=""><button class="pkg-th-rm" data-phid="${ph.id}" data-pi="${pi}">✕</button></div>`).join('')}
+        <div class="pkg-add" data-pi="${pi}"><span>📷</span><span>Add</span></div>
+      </div>
+      <input type="file" id="pfi-${pi}" accept="image/*" multiple style="display:none">
+    </div>`).join('');
+
+  myPkgs.forEach((_,pi)=>{
+    const ab=el.querySelector(`.pkg-add[data-pi="${pi}"]`);
+    const fi=document.getElementById(`pfi-${pi}`);
+    ab.addEventListener('click',()=>fi.click());
+    fi.addEventListener('change',async function(){
+      const pkgId=myPkgs[pi].id;
+      if(!pkgId){toast('Save the profile first to add photos.');return;}
+      toast('⏳ Uploading...');
+      for(const f of Array.from(this.files)){
+        const ext=f.name.split('.').pop();
+        const path=`${user.id}/${pkgId}/${Date.now()}.${ext}`;
+        const {error}=await sb.storage.from('packages').upload(path,f);
+        if(error)continue;
+        const {data:u}=sb.storage.from('packages').getPublicUrl(path);
+        const {data:ins}=await sb.from('package_photos').insert({package_id:pkgId,url:u.publicUrl}).select().single();
+        if(ins)myPkgs[pi].package_photos=[...(myPkgs[pi].package_photos||[]),ins];
+      }
+      renderPkgEditor();toast('✅ Photos added!');this.value='';
+    });
+  });
+
+  el.querySelectorAll('.pkg-th-rm').forEach(b=>b.addEventListener('click',async()=>{
+    const pi=parseInt(b.dataset.pi);
+    await sb.from('package_photos').delete().eq('id',b.dataset.phid);
+    myPkgs[pi].package_photos=myPkgs[pi].package_photos.filter(p=>p.id!==b.dataset.phid);
+    renderPkgEditor();
+  }));
+
+  el.querySelectorAll('input[data-f],textarea[data-f]').forEach(inp=>inp.addEventListener('input',()=>{
+    const pi=parseInt(inp.dataset.pi);myPkgs[pi][inp.dataset.f]=inp.value;
+  }));
+}
+
+async function saveProfile(){
+  const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving...';
+  const {error}=await sb.from('detailer_profiles').upsert({id:user.id,business_name:document.getElementById('ed-biz').value,service_area:document.getElementById('ed-area').value,bio:document.getElementById('ed-bio').value,years_experience:parseInt(document.getElementById('ed-exp').value),is_mobile:document.getElementById('ed-mob').value==='true'});
+  if(error){toast('❌ '+error.message);btn.disabled=false;btn.textContent='Save';return;}
+  for(let i=0;i<myPkgs.length;i++){
+    const p=myPkgs[i];
+    if(p.id){await sb.from('packages').update({name:p.name,price:p.price,description:p.description,duration_hours:p.duration_hours,sort_order:i}).eq('id',p.id);}
+    else{const {data:np}=await sb.from('packages').insert({detailer_id:user.id,name:p.name,price:p.price,description:p.description,duration_hours:p.duration_hours,sort_order:i}).select().single();if(np)myPkgs[i]={...myPkgs[i],id:np.id};}
+  }
+  document.getElementById('pm-area').textContent=document.getElementById('ed-area').value;
+  btn.disabled=false;btn.textContent='Save';toast('✅ Profile saved!');
+}
+
+function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('on');}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  await init();
+
+  document.getElementById('btn-c').addEventListener('click',()=>{mode='customer';show('login');});
+  document.getElementById('btn-d').addEventListener('click',()=>{mode='detailer';show('login');});
+  document.getElementById('t-in').addEventListener('click',()=>{document.getElementById('t-in').classList.add('on');document.getElementById('t-up').classList.remove('on');document.getElementById('name-fg').style.display='none';document.getElementById('li-btn').textContent='Sign In';hideErr();});
+  document.getElementById('t-up').addEventListener('click',()=>{document.getElementById('t-up').classList.add('on');document.getElementById('t-in').classList.remove('on');document.getElementById('name-fg').style.display='block';document.getElementById('li-btn').textContent='Create Account';hideErr();});
+  document.getElementById('li-btn').addEventListener('click',doAuth);
+  document.getElementById('i-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();});
+  document.getElementById('li-back').addEventListener('click',()=>show('splash'));
+
+  document.getElementById('chips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');curFilter=c.dataset.f;if(window._dls)renderList(window._dls);});
+  document.getElementById('sinput').addEventListener('input',()=>{if(window._dls)renderList(window._dls);});
+
+  document.getElementById('p-back').addEventListener('click',()=>show('search'));
+  document.getElementById('go-book').addEventListener('click',openBooking);
+  document.getElementById('bk-x').addEventListener('click',()=>show('profile'));
+  document.getElementById('tgrid').addEventListener('click',e=>{const c=e.target.closest('.tc');if(!c)return;document.querySelectorAll('.tc').forEach(x=>x.classList.remove('on'));c.classList.add('on');selTime=c.textContent;});
+  document.getElementById('conf-bk').addEventListener('click',confirmBooking);
+
+  document.getElementById('cal-prev').addEventListener('click',()=>{calM--;if(calM<0){calM=11;calY--;}buildCal();});
+  document.getElementById('cal-next').addEventListener('click',()=>{calM++;if(calM>11){calM=0;calY++;}buildCal();});
+
+  document.querySelectorAll('#cnav .ni[data-cs]').forEach(i=>i.addEventListener('click',()=>{document.querySelectorAll('#cnav .ni').forEach(n=>n.classList.remove('on'));i.classList.add('on');show(i.dataset.cs);}));
+  document.getElementById('c-out').addEventListener('click',doLogout);
+
+  document.querySelectorAll('#dnav .ni[data-ds]').forEach(i=>i.addEventListener('click',()=>{document.querySelectorAll('#dnav .ni').forEach(n=>n.classList.remove('on'));i.classList.add('on');if(i.dataset.ds==='myprofile'){initAvUpload();initGallery();}show(i.dataset.ds);}));
+  document.getElementById('d-out').addEventListener('click',doLogout);
+
+  document.getElementById('save-btn').addEventListener('click',saveProfile);
+  document.getElementById('add-pkg').addEventListener('click',()=>{myPkgs.push({name:'New Package',price:0,duration_hours:2,description:'',package_photos:[]});renderPkgEditor();setTimeout(()=>{const l=document.querySelector('#pkg-list .pkg-ed:last-child');if(l)l.scrollIntoView({behavior:'smooth'});},100);});
+
+  document.getElementById('lb-x').addEventListener('click',()=>document.getElementById('lb').classList.remove('on'));
+  document.getElementById('lb').addEventListener('click',e=>{if(e.target===document.getElementById('lb'))document.getElementById('lb').classList.remove('on');});
+});
+</script>
+</body>
+</html>
